@@ -1,23 +1,12 @@
 import { load } from "cheerio";
 
-interface Env {
-  DISCORDMEMBERS: KVNamespace;
-  WEBHOOK: string;
-  INVITE: string;
-}
-
 export default {
-  async scheduled(
-    controller: ScheduledController,
-    env: Env,
-    ctx: ExecutionContext
-  ) {
+  async scheduled(env: Env) {
     const WEBHOOK_URL = env.WEBHOOK;
 
     const prevMemberCount = await env.DISCORDMEMBERS.get("members");
     try {
-      const response = await fetch(env.INVITE);
-      const html = await response.text();
+      const html = await fetch(env.INVITE).then((res) => res.text());
 
       const $ = load(html);
 
@@ -47,23 +36,14 @@ export default {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              content: `member count changed to ${memberCount} <@532053122017787924>`,
+              content: `Member count changed to ${memberCount} from ${prevMemberCount}`,
             }),
           });
         } else {
-          await fetch(WEBHOOK_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              content: `member count unchanged: ${memberCount}`,
-            }),
-          });
+          console.log(`Member count unchanged from ${memberCount}`);
         }
       }
 
-      // Store in KV
       await env.DISCORDMEMBERS.put("members", memberCount);
     } catch (error) {
       console.error("Error fetching Discord members:", error);
@@ -73,7 +53,7 @@ export default {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: `i failed.`,
+          content: `Error fetching Discord members: ${error}`,
         }),
       });
     }
