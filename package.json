@@ -13,6 +13,7 @@
     "wrangler": "^3.60.3"
   },
   "dependencies": {
-    "ofetch": "^1.4.1"
+    "ofetch": "^1.4.1",
+    "unstorage": "^1.13.1"
   }
 }

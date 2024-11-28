@@ -1,13 +1,23 @@
 import { ofetch } from "ofetch";
+import { createStorage } from "unstorage";
+import cloudflareKVBindingDriver from "unstorage/drivers/cloudflare-kv-binding";
 
 export default {
-  async scheduled(env: Env) {
+  async scheduled(
+    controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext
+  ) {
     const WEBHOOK_URL = env.WEBHOOK;
     const INVITE = env.INVITE;
 
+    const kv = createStorage({
+      driver: cloudflareKVBindingDriver({ binding: "DISCORDMEMBERS" }),
+    });
+
     try {
-      const prevMemberCount = await env.DISCORDMEMBERS.get("members");
-      const prevGuildData = await env.DISCORDMEMBERS.get("guild");
+      const prevMemberCount: string | null = await kv.getItem("members");
+      const prevGuildData = await kv.getItem("guild");
 
       const inviteData = await ofetch(
         `https://discord.com/api/v10/invites/${INVITE}?with_counts=true`
@@ -47,19 +57,10 @@ export default {
         }
       }
 
-      await env.DISCORDMEMBERS.put("members", memberCount);
-      await env.DISCORDMEMBERS.put("guild", inviteData.guild);
+      await kv.set("members", memberCount);
+      await kv.set("guild", inviteData.guild);
     } catch (error) {
       console.error("Error fetching Discord members:", error);
-      await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: `Error fetching Discord members: ${error}`,
-        }),
-      });
     }
   },
 };
