@@ -9,7 +9,7 @@ export default {
       const prevMemberCount = await env.DISCORDMEMBERS.get("members");
       const inviteData = await ofetch(
         `https://discord.com/api/v10/invites/${INVITE}?with_counts=true`
-      ).then((res) => res.json());
+      );
 
       const memberCount = inviteData.approximate_member_count;
 
