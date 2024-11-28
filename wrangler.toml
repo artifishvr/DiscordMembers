@@ -8,7 +8,7 @@ name = "discordmembers"
 enabled = true
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["0 * * * *"]
 
 [[kv_namespaces]]
 binding = "DISCORDMEMBERS"

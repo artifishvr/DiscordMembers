@@ -2,6 +2,11 @@ import { ofetch } from "ofetch";
 import { createStorage } from "unstorage";
 import cloudflareKVBindingDriver from "unstorage/drivers/cloudflare-kv-binding";
 
+function removeFeatures(guild: any) {
+  const { features, ...rest } = guild;
+  return rest;
+}
+
 export default {
   async scheduled(
     controller: ScheduledController,
@@ -24,6 +29,7 @@ export default {
       );
 
       const memberCount = inviteData.approximate_member_count;
+      const guild = removeFeatures(inviteData.guild);
 
       if (prevMemberCount !== null) {
         if (memberCount != prevMemberCount) {
@@ -42,7 +48,7 @@ export default {
       }
 
       if (prevGuildData !== null) {
-        if (prevGuildData !== inviteData.guild) {
+        if (prevGuildData !== guild) {
           await fetch(WEBHOOK_URL, {
             method: "POST",
             headers: {
@@ -50,7 +56,7 @@ export default {
             },
             body: JSON.stringify({
               content: `Guild changed to \`\`\`${JSON.stringify(
-                inviteData.guild
+                guild
               )}\`\`\` from \`\`\`${JSON.stringify(prevGuildData)}\`\`\``,
             }),
           });
@@ -58,7 +64,7 @@ export default {
       }
 
       await kv.set("members", memberCount);
-      await kv.set("guild", inviteData.guild);
+      await kv.set("guild", guild);
     } catch (error) {
       console.error("Error fetching Discord members:", error);
     }
