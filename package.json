@@ -13,6 +13,6 @@
     "wrangler": "^3.60.3"
   },
   "dependencies": {
-    "cheerio": "^1.0.0"
+    "ofetch": "^1.4.1"
   }
 }
