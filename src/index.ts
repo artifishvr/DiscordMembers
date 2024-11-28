@@ -12,7 +12,7 @@ export default {
     const INVITE = env.INVITE;
 
     const kv = createStorage({
-      driver: cloudflareKVBindingDriver({ binding: "DISCORDMEMBERS" }),
+      driver: cloudflareKVBindingDriver({ binding: env.DISCORDMEMBERS }),
     });
 
     try {
