@@ -17,14 +17,12 @@ export default {
 
     try {
       const prevMemberCount: number | null = await kv.getItem("members");
-      const prevBoostCount: number | null = await kv.getItem("boosts");
 
       const inviteData = await ofetch(
         `https://discord.com/api/v10/invites/${INVITE}?with_counts=true`
       );
 
       const memberCount: number = inviteData.approximate_member_count;
-      const boosts: number = inviteData.guild.premium_subscription_count;
 
       if (prevMemberCount !== null) {
         if (memberCount != prevMemberCount) {
@@ -40,21 +38,6 @@ export default {
           await kv.set("members", memberCount);
         } else {
           console.log(`Member count unchanged from ${memberCount}`);
-        }
-      }
-
-      if (prevBoostCount !== null) {
-        if (prevBoostCount !== boosts) {
-          await fetch(WEBHOOK_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              content: `Boost count changed to ${boosts} from ${prevBoostCount}`,
-            }),
-          });
-          await kv.set("boosts", boosts);
         }
       }
     } catch (error) {
