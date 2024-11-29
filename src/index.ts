@@ -2,11 +2,6 @@ import { ofetch } from "ofetch";
 import { createStorage } from "unstorage";
 import cloudflareKVBindingDriver from "unstorage/drivers/cloudflare-kv-binding";
 
-function removeFeatures(guild: any) {
-  const { features, ...rest } = guild;
-  return rest;
-}
-
 export default {
   async scheduled(
     controller: ScheduledController,
@@ -21,15 +16,15 @@ export default {
     });
 
     try {
-      const prevMemberCount: string | null = await kv.getItem("members");
-      const prevGuildData = await kv.getItem("guild");
+      const prevMemberCount: number | null = await kv.getItem("members");
+      const prevBoostCount: number | null = await kv.getItem("boosts");
 
       const inviteData = await ofetch(
         `https://discord.com/api/v10/invites/${INVITE}?with_counts=true`
       );
 
-      const memberCount = inviteData.approximate_member_count;
-      const guild = removeFeatures(inviteData.guild);
+      const memberCount: number = inviteData.approximate_member_count;
+      const boosts: number = inviteData.guild.premium_subscription_count;
 
       if (prevMemberCount !== null) {
         if (memberCount != prevMemberCount) {
@@ -42,29 +37,26 @@ export default {
               content: `Member count changed to ${memberCount} from ${prevMemberCount}`,
             }),
           });
+          await kv.set("members", memberCount);
         } else {
           console.log(`Member count unchanged from ${memberCount}`);
         }
       }
 
-      if (prevGuildData !== null) {
-        if (prevGuildData !== guild) {
+      if (prevBoostCount !== null) {
+        if (prevBoostCount !== boosts) {
           await fetch(WEBHOOK_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              content: `Guild changed to \`\`\`${JSON.stringify(
-                guild
-              )}\`\`\` from \`\`\`${JSON.stringify(prevGuildData)}\`\`\``,
+              content: `Boost count changed to ${boosts} from ${prevBoostCount}`,
             }),
           });
+          await kv.set("boosts", boosts);
         }
       }
-
-      await kv.set("members", memberCount);
-      await kv.set("guild", guild);
     } catch (error) {
       console.error("Error fetching Discord members:", error);
     }
