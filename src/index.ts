@@ -40,8 +40,17 @@ export default {
           console.log(`Member count unchanged from ${memberCount}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching Discord members:", error);
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: `Error fetching Discord members ${error}`,
+        }),
+      });
     }
   },
 };
